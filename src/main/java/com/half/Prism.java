@@ -1,5 +1,7 @@
 package com.half;
 
+import org.joml.Vector3f;
+
 public class Prism extends GameObject {
     private float width, height, depth;
 
@@ -48,5 +50,12 @@ public class Prism extends GameObject {
         velocity.x *= -0.7f;
         velocity.y *= -0.7f;
         velocity.z *= -0.7f;
+    }
+    
+    @Override
+    public void setColor(float r, float g, float b, float a) {
+        if (this.mesh != null) {
+            this.mesh.setColor(r, g, b, a);
+        }
     }
 }

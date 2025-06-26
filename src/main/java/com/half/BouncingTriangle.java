@@ -187,6 +187,6 @@ public class BouncingTriangle {
     }
 
     public static void main(String[] args) {
-        new Main().run();
+        new BouncingTriangle().run();
     }
 }

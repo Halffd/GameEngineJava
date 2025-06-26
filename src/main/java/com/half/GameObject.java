@@ -1,6 +1,11 @@
 package com.half;
 
-// Full GameObject class with all the bells and whistles
+import org.joml.Vector3f;
+
+/**
+ * Base class for all game objects in the scene.
+ * Handles common properties like position, rotation, scale, and physics.
+ */
 public abstract class GameObject implements Renderable {
     protected Vector3f position;
     protected Vector3f rotation;
@@ -99,25 +104,26 @@ public abstract class GameObject implements Renderable {
     public void setScale(float x, float y, float z) { this.scale.set(x, y, z); }
 
     public Vector3f getVelocity() { return velocity; }
+    
     public void setVelocity(Vector3f velocity) { this.velocity = velocity; }
     public void setVelocity(float x, float y, float z) { this.velocity.set(x, y, z); }
-
+    
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
-
-    public String getName() { return name; }
-
+    
     public boolean hasPhysics() { return hasPhysics; }
-    public void setPhysics(boolean hasPhysics) { this.hasPhysics = hasPhysics; }
-
+    public void setHasPhysics(boolean hasPhysics) { this.hasPhysics = hasPhysics; }
+    
     public Vector3f getBounds() { return bounds; }
     public void setBounds(Vector3f bounds) { this.bounds = bounds; }
-    public boolean equals(GameObject other) {
-        if (other == null) return false;
-        if (other == this) return true;
-        if (other.hashCode() != this.hashCode()) return false;
-        if (other.getClass() != this.getClass()) return false;
-    }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public Mesh getMesh() { return mesh; }
+    public void setMesh(Mesh mesh) { this.mesh = mesh; }
+    
+    @Override
     public String toString() {
         return "GameObject{" +
                 "name='" + name + '\'' +
@@ -129,7 +135,37 @@ public abstract class GameObject implements Renderable {
                 ", hasPhysics=" + hasPhysics +
                 ", bounds=" + bounds +
                 ", hashCode=" + hashCode() +
-                ", Mesh hashCode=" + mesh.hashCode() +
+                ", Mesh hashCode=" + (mesh != null ? mesh.hashCode() : "null") +
                 '}';
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        GameObject other = (GameObject) obj;
+        return active == other.active && 
+               hasPhysics == other.hasPhysics &&
+               name.equals(other.name) &&
+               position.equals(other.position) &&
+               rotation.equals(other.rotation) &&
+               scale.equals(other.scale) &&
+               velocity.equals(other.velocity) &&
+               bounds.equals(other.bounds) &&
+               (mesh == other.mesh || (mesh != null && mesh.equals(other.mesh)));
+    }
+    
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (position != null ? position.hashCode() : 0);
+        result = 31 * result + (rotation != null ? rotation.hashCode() : 0);
+        result = 31 * result + (scale != null ? scale.hashCode() : 0);
+        result = 31 * result + (velocity != null ? velocity.hashCode() : 0);
+        result = 31 * result + (active ? 1 : 0);
+        result = 31 * result + (hasPhysics ? 1 : 0);
+        result = 31 * result + (bounds != null ? bounds.hashCode() : 0);
+        result = 31 * result + (mesh != null ? mesh.hashCode() : 0);
+        return result;
     }
 }

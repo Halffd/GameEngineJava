@@ -1,5 +1,7 @@
 package com.half;
 
+import org.joml.Vector3f;
+
 public class Pyramid extends GameObject {
     private float baseSize, height;
 
@@ -47,5 +49,12 @@ public class Pyramid extends GameObject {
         velocity.x *= -0.6f;
         velocity.y *= -0.6f;
         velocity.z *= -0.6f;
+    }
+    
+    @Override
+    public void setColor(float r, float g, float b, float a) {
+        if (this.mesh != null) {
+            this.mesh.setColor(r, g, b, a);
+        }
     }
 }

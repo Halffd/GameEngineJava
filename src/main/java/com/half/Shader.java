@@ -1,17 +1,22 @@
 package com.half;
-// Vector3f utility class (or use JOML library)
-public class Vector3f {
-    public float x, y, z;
 
-    public Vector3f() { this(0, 0, 0); }
-    public Vector3f(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
+import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.system.MemoryStack;
 
-    public Vector3f add(Vector3f other) { return new Vector3f(x + other.x, y + other.y, z + other.z); }
-    public Vector3f mul(float scalar) { return new Vector3f(x * scalar, y * scalar, z * scalar); }
-    public void set(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
-}
+import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
-// Shader class - because immediate mode is for cavemen
+// JOML classes (will be used directly with fully qualified names to avoid import issues)
+// import org.joml.Matrix4f;
+// import org.joml.Vector3f;
+
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL30.*;
+
+// Shader class for handling OpenGL shaders
 public class Shader {
     private int programId;
     private int vertexShaderId;
@@ -93,13 +98,15 @@ public class Shader {
         uniforms.put(uniformName, uniformLocation);
     }
 
-    public void setUniform(String uniformName, Matrix4f value) {
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-        value.get(buffer);
-        glUniformMatrix4fv(uniforms.get(uniformName), false, buffer);
+    public void setUniform(String uniformName, org.joml.Matrix4f value) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer buffer = stack.mallocFloat(16);
+            value.get(buffer);
+            glUniformMatrix4fv(uniforms.get(uniformName), false, buffer);
+        }
     }
 
-    public void setUniform(String uniformName, Vector3f value) {
+    public void setUniform(String uniformName, org.joml.Vector3f value) {
         glUniform3f(uniforms.get(uniformName), value.x, value.y, value.z);
     }
 
@@ -112,89 +119,72 @@ public class Shader {
     }
 
     // Default shaders for basic rendering
-    public static final String DEFAULT_VERTEX_SHADER = """
-        #version 330 core
-        
-        layout (location = 0) in vec3 position;
-        layout (location = 1) in vec3 color;
-        
-        uniform mat4 projectionMatrix;
-        uniform mat4 modelViewMatrix;
-        
-        out vec3 vertexColor;
-        
-        void main() {
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            vertexColor = color;
-        }
-        """;
+    public static final String DEFAULT_VERTEX_SHADER = 
+        "#version 330 core\n" +
+        "\n" +
+        "layout (location = 0) in vec3 position;\n" +
+        "layout (location = 1) in vec3 color;\n" +
+        "\n" +
+        "uniform mat4 projectionMatrix;\n" +
+        "uniform mat4 modelViewMatrix;\n" +
+        "\n" +
+        "out vec3 vertexColor;\n" +
+        "\n" +
+        "void main() {\n" +
+        "    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n" +
+        "    vertexColor = color;\n" +
+        "}";
 
-    public static final String DEFAULT_FRAGMENT_SHADER = """
-        #version 330 core
-        
-        in vec3 vertexColor;
-        uniform float time;
-        
-        out vec4 fragColor;
-        
-        void main() {
-            // Animated color based on time
-            float r = vertexColor.r * (sin(time) * 0.5 + 0.5);
-            float g = vertexColor.g * (sin(time + 2.0) * 0.5 + 0.5);
-            float b = vertexColor.b * (sin(time + 4.0) * 0.5 + 0.5);
-            fragColor = vec4(r, g, b, 1.0);
-        }
-        """;
+    public static final String DEFAULT_FRAGMENT_SHADER = 
+        "#version 330 core\n" +
+        "\n" +
+        "in vec3 vertexColor;\n" +
+        "uniform float time;\n" +
+        "\n" +
+        "out vec4 fragColor;\n" +
+        "\n" +
+        "void main() {\n" +
+        "    // Animated color based on time\n" +
+        "    float r = vertexColor.r * (sin(time) * 0.5 + 0.5);\n" +
+        "    float g = vertexColor.g * (sin(time + 2.0) * 0.5 + 0.5);\n" +
+        "    float b = vertexColor.b * (sin(time + 4.0) * 0.5 + 0.5);\n" +
+        "    fragColor = vec4(r, g, b, 1.0);\n" +
+        "}";
 }
 
-// Enhanced Mesh class with colors
-public class Mesh implements Renderable {
-    private int vaoId;
-    private int positionVboId;
-    private int colorVboId;
-    private int indexVboId;
-    private int vertexCount;
+// Local Mesh class for shader testing purposes
+class LocalMesh implements Renderable {
+    private final Mesh mesh;
+    private float[] vertices;
+    private float[] colors;
+    private int[] indices;
 
-    public Mesh(float[] positions, float[] colors, int[] indices) {
-        vertexCount = indices.length;
-
-        vaoId = glGenVertexArrays();
-        glBindVertexArray(vaoId);
-
-        // Position VBO
-        positionVboId = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, positionVboId);
-        glBufferData(GL_ARRAY_BUFFER, positions, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-        glEnableVertexAttribArray(0);
-
-        // Color VBO
-        colorVboId = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, colorVboId);
-        glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
-        glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
-        glEnableVertexAttribArray(1);
-
-        // Index VBO
-        indexVboId = glGenBuffers();
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexVboId);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
-
-        glBindVertexArray(0);
+    public LocalMesh(float[] positions, float[] colors, int[] indices) {
+        // Convert interleaved vertices for the main Mesh class
+        this.vertices = positions;
+        this.colors = colors;
+        this.indices = indices;
+        
+        // Create a simple mesh for rendering
+        float[] interleaved = new float[positions.length / 3 * 3]; // Just positions for now
+        System.arraycopy(positions, 0, interleaved, 0, positions.length);
+        this.mesh = new Mesh(interleaved);
     }
 
     @Override
     public void render() {
-        glBindVertexArray(vaoId);
-        glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        mesh.render();
     }
 
     @Override
     public void cleanup() {
-        glDeleteBuffers(positionVboId);
-        glDeleteBuffers(colorVboId);
-        glDeleteBuffers(indexVboId);
-        glDeleteVertexArrays(vaoId);
+        if (mesh != null) {
+            mesh.cleanup();
+        }
+    }
+    
+    @Override
+    public void setColor(float r, float g, float b, float a) {
+        mesh.setColor(r, g, b, a);
     }
 }

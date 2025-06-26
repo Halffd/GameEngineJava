@@ -1,5 +1,7 @@
 package com.half;
 
+import org.joml.Vector3f;
+
 public class EnhancedGameObjectFactory {
     public static Cube createCube(String name, Vector3f position, Vector3f scale) {
         Cube cube = new Cube(name);
