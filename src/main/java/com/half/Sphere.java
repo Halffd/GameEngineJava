@@ -9,7 +9,7 @@ public class Sphere extends GameObject {
     private float radius;
 
     public Sphere(String name, float radius, int rings, int sectors) {
-        super(name, generateSphereMesh(radius, rings, sectors));
+        super(name, new SphereMesh(radius, rings, sectors));
         this.radius = radius;
         this.hasPhysics = true;
         this.bounds = new Vector3f(radius, radius, radius);
@@ -19,14 +19,7 @@ public class Sphere extends GameObject {
         this(name, 1.0f, 20, 20); // Default sphere
     }
     
-    @Override
-    public void setColor(float r, float g, float b, float a) {
-        if (this.mesh != null) {
-            this.mesh.setColor(r, g, b, a);
-        }
-    }
-
-    private static Mesh generateSphereMesh(float radius, int rings, int sectors) {
+    private static SphereMesh generateSphereMesh(float radius, int rings, int sectors) {
         if (rings < 2) rings = 2;
         if (sectors < 3) sectors = 3;
         List<Float> vertices = new ArrayList<>();
@@ -74,7 +67,7 @@ public class Sphere extends GameObject {
             vertexArray[i] = vertexData.get(i);
         }
         
-        return new Mesh(vertexArray);
+        return new SphereMesh(radius, rings, sectors);
     }
     
     private static void addVertex(List<Float> src, List<Float> dst, int index) {
@@ -92,8 +85,8 @@ public class Sphere extends GameObject {
     @Override
     public void update(float deltaTime) {
         // Gentle rotation
-        rotation.y += 30 * deltaTime;
-        rotation.x += 15 * deltaTime;
+        getTransform().getRotation().y += 30 * deltaTime;
+        getTransform().getRotation().x += 15 * deltaTime;
         updatePhysics(deltaTime);
     }
 
@@ -101,9 +94,9 @@ public class Sphere extends GameObject {
     public void onCollision(GameObject other) {
         System.out.println("Sphere " + name + " bounced off " + other.getName());
         // Elastic collision for spheres
-        velocity.x *= -0.95f;
-        velocity.y *= -0.95f;
-        velocity.z *= -0.95f;
+        getVelocity().x *= -0.95f;
+        getVelocity().y *= -0.95f;
+        getVelocity().z *= -0.95f;
     }
 
     public float getRadius() { 

@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import static org.lwjgl.opengl.GL11.*;
+
 public class Scene {
     private List<GameObject> gameObjects;
     private List<GameObject> toAdd;
@@ -77,7 +79,7 @@ public class Scene {
             // Set object properties
             obj.getTransform().setPosition(x, y, z);
             obj.setRotationSpeed(rotSpeed);
-            obj.setColor(new Vector4f(r, g, b, 1.0f));
+            obj.setColor(r, g, b, 1.0f);
             
             // Add to scene
             addGameObject(obj);
@@ -148,7 +150,7 @@ public class Scene {
 
         // Create uniforms
         shader.createUniform("projectionMatrix");
-        shader.createUniform("modelViewMatrix");
+        shader.createUniform("viewPos");
         shader.createUniform("time");
     }
 
@@ -231,7 +233,7 @@ public class Scene {
             
             // Set model matrix and object color
             shader.setUniform("modelMatrix", modelMatrix);
-            shader.setUniform("objectColor", obj.getColor().x, obj.getColor().y, obj.getColor().z);
+            shader.setUniform("objectColor", obj.getColor());
             
             // Render the object
             obj.render();
@@ -280,7 +282,7 @@ public class Scene {
                 ", shader=" + shader +
                 ", camera=" + camera +
                 ", modelMatrix=" + modelMatrix +
-                ", modelViewMatrix=" + modelViewMatrix +
+                
                 ", gameObjects= {" + objs + "}";
     }
 }

@@ -1,19 +1,20 @@
 package com.half;
 
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 /**
  * Base class for all game objects in the scene.
  * Handles common properties like position, rotation, scale, and physics.
  */
 public abstract class GameObject implements Renderable {
-    protected Vector3f position;
-    protected Vector3f rotation;
-    protected Vector3f scale;
+    protected Transform transform;
     protected Vector3f velocity;
     protected Mesh mesh;
     protected boolean active;
     protected String name;
+    protected float rotationSpeed;
+    protected Vector4f color;
 
     // Physics properties
     protected boolean hasPhysics;
@@ -22,13 +23,13 @@ public abstract class GameObject implements Renderable {
     public GameObject(String name, Mesh mesh) {
         this.name = name;
         this.mesh = mesh;
-        this.position = new Vector3f(0, 0, 0);
-        this.rotation = new Vector3f(0, 0, 0);
-        this.scale = new Vector3f(1, 1, 1);
+        this.transform = new Transform();
         this.velocity = new Vector3f(0, 0, 0);
         this.active = true;
         this.hasPhysics = false;
         this.bounds = new Vector3f(1, 1, 1); // Default unit cube bounds
+        this.rotationSpeed = 0.0f;
+        this.color = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f); // Default to white
     }
 
     // Core lifecycle methods
@@ -41,9 +42,9 @@ public abstract class GameObject implements Renderable {
         if (!hasPhysics) return;
 
         // Apply velocity
-        position.x += velocity.x * deltaTime;
-        position.y += velocity.y * deltaTime;
-        position.z += velocity.z * deltaTime;
+        transform.getPosition().x += velocity.x * deltaTime;
+        transform.getPosition().y += velocity.y * deltaTime;
+        transform.getPosition().z += velocity.z * deltaTime;
     }
 
     // Collision detection (AABB)
@@ -51,25 +52,25 @@ public abstract class GameObject implements Renderable {
         if (!hasPhysics || !other.hasPhysics) return false;
 
         Vector3f thisMin = new Vector3f(
-                position.x - bounds.x * scale.x,
-                position.y - bounds.y * scale.y,
-                position.z - bounds.z * scale.z
+                transform.getPosition().x - bounds.x * transform.getScale().x,
+                transform.getPosition().y - bounds.y * transform.getScale().y,
+                transform.getPosition().z - bounds.z * transform.getScale().z
         );
         Vector3f thisMax = new Vector3f(
-                position.x + bounds.x * scale.x,
-                position.y + bounds.y * scale.y,
-                position.z + bounds.z * scale.z
+                transform.getPosition().x + bounds.x * transform.getScale().x,
+                transform.getPosition().y + bounds.y * transform.getScale().y,
+                transform.getPosition().z + bounds.z * transform.getScale().z
         );
 
         Vector3f otherMin = new Vector3f(
-                other.position.x - other.bounds.x * other.scale.x,
-                other.position.y - other.bounds.y * other.scale.y,
-                other.position.z - other.bounds.z * other.scale.z
+                other.transform.getPosition().x - other.bounds.x * other.transform.getScale().x,
+                other.transform.getPosition().y - other.bounds.y * other.transform.getScale().y,
+                other.transform.getPosition().z - other.bounds.z * other.transform.getScale().z
         );
         Vector3f otherMax = new Vector3f(
-                other.position.x + other.bounds.x * other.scale.x,
-                other.position.y + other.bounds.y * other.scale.y,
-                other.position.z + other.bounds.z * other.scale.z
+                other.transform.getPosition().x + other.bounds.x * other.transform.getScale().x,
+                other.transform.getPosition().y + other.bounds.y * other.transform.getScale().y,
+                other.transform.getPosition().z + other.bounds.z * other.transform.getScale().z
         );
 
         return (thisMin.x <= otherMax.x && thisMax.x >= otherMin.x) &&
@@ -91,17 +92,19 @@ public abstract class GameObject implements Renderable {
     }
 
     // Getters and setters
-    public Vector3f getPosition() { return position; }
-    public void setPosition(Vector3f position) { this.position = position; }
-    public void setPosition(float x, float y, float z) { this.position.set(x, y, z); }
+    public Transform getTransform() { return transform; }
 
-    public Vector3f getRotation() { return rotation; }
-    public void setRotation(Vector3f rotation) { this.rotation = rotation; }
-    public void setRotation(float x, float y, float z) { this.rotation.set(x, y, z); }
+    public Vector3f getPosition() { return transform.getPosition(); }
+    public void setPosition(Vector3f position) { this.transform.setPosition(position); }
+    public void setPosition(float x, float y, float z) { this.transform.setPosition(x, y, z); }
 
-    public Vector3f getScale() { return scale; }
-    public void setScale(Vector3f scale) { this.scale = scale; }
-    public void setScale(float x, float y, float z) { this.scale.set(x, y, z); }
+    public Vector3f getRotation() { return transform.getRotation(); }
+    public void setRotation(Vector3f rotation) { this.transform.setRotation(rotation); }
+    public void setRotation(float x, float y, float z) { this.transform.setRotation(x, y, z); }
+
+    public Vector3f getScale() { return transform.getScale(); }
+    public void setScale(Vector3f scale) { this.transform.setScale(scale); }
+    public void setScale(float x, float y, float z) { this.transform.setScale(x, y, z); }
 
     public Vector3f getVelocity() { return velocity; }
     
@@ -110,6 +113,8 @@ public abstract class GameObject implements Renderable {
     
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    public boolean isVisible() { return active; } // Assuming active means visible for now
     
     public boolean hasPhysics() { return hasPhysics; }
     public void setHasPhysics(boolean hasPhysics) { this.hasPhysics = hasPhysics; }
@@ -122,21 +127,28 @@ public abstract class GameObject implements Renderable {
     
     public Mesh getMesh() { return mesh; }
     public void setMesh(Mesh mesh) { this.mesh = mesh; }
+
+    public float getRotationSpeed() { return rotationSpeed; }
+    public void setRotationSpeed(float rotationSpeed) { this.rotationSpeed = rotationSpeed; }
+
+    public Vector4f getColor() { return color; }
+    @Override
+    public void setColor(float r, float g, float b, float a) { this.color.set(r, g, b, a); }
     
     @Override
     public String toString() {
         return "GameObject{" +
-                "name='" + name + '\'' +
-                ", position=" + position +
-                ", rotation=" + rotation +
-                ", scale=" + scale +
+                "name='" + name + "'" +
+                ", transform=" + transform +
                 ", velocity=" + velocity +
                 ", active=" + active +
                 ", hasPhysics=" + hasPhysics +
                 ", bounds=" + bounds +
+                ", rotationSpeed=" + rotationSpeed +
+                ", color=" + color +
                 ", hashCode=" + hashCode() +
                 ", Mesh hashCode=" + (mesh != null ? mesh.hashCode() : "null") +
-                '}';
+                "}";
     }
     
     @Override
@@ -146,25 +158,25 @@ public abstract class GameObject implements Renderable {
         GameObject other = (GameObject) obj;
         return active == other.active && 
                hasPhysics == other.hasPhysics &&
+               Float.compare(rotationSpeed, other.rotationSpeed) == 0 &&
                name.equals(other.name) &&
-               position.equals(other.position) &&
-               rotation.equals(other.rotation) &&
-               scale.equals(other.scale) &&
+               transform.equals(other.transform) &&
                velocity.equals(other.velocity) &&
                bounds.equals(other.bounds) &&
+               color.equals(other.color) &&
                (mesh == other.mesh || (mesh != null && mesh.equals(other.mesh)));
     }
     
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (position != null ? position.hashCode() : 0);
-        result = 31 * result + (rotation != null ? rotation.hashCode() : 0);
-        result = 31 * result + (scale != null ? scale.hashCode() : 0);
+        result = 31 * result + (transform != null ? transform.hashCode() : 0);
         result = 31 * result + (velocity != null ? velocity.hashCode() : 0);
         result = 31 * result + (active ? 1 : 0);
         result = 31 * result + (hasPhysics ? 1 : 0);
+        result = 31 * result + Float.hashCode(rotationSpeed);
         result = 31 * result + (bounds != null ? bounds.hashCode() : 0);
+        result = 31 * result + (color != null ? color.hashCode() : 0);
         result = 31 * result + (mesh != null ? mesh.hashCode() : 0);
         return result;
     }

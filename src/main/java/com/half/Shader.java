@@ -118,6 +118,10 @@ public class Shader {
         glUniform1i(uniforms.get(uniformName), value);
     }
 
+    public void setUniform(String uniformName, org.joml.Vector4f value) {
+        glUniform4f(uniforms.get(uniformName), value.x, value.y, value.z, value.w);
+    }
+
     // Default shaders for basic rendering
     public static final String DEFAULT_VERTEX_SHADER = 
         "#version 330 core\n" +
@@ -168,7 +172,12 @@ class LocalMesh implements Renderable {
         // Create a simple mesh for rendering
         float[] interleaved = new float[positions.length / 3 * 3]; // Just positions for now
         System.arraycopy(positions, 0, interleaved, 0, positions.length);
-        this.mesh = new Mesh(interleaved);
+        // Create dummy indices for the Mesh constructor
+        int[] dummyIndices = new int[positions.length / 3];
+        for (int i = 0; i < dummyIndices.length; i++) {
+            dummyIndices[i] = i;
+        }
+        this.mesh = new Mesh(interleaved, dummyIndices);
     }
 
     @Override

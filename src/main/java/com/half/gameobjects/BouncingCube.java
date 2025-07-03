@@ -11,7 +11,7 @@ public class BouncingCube extends Cube {
     private final float bounceReduction;
 
     public BouncingCube(String name, Vector3f screenBounds) {
-        super(name);
+        super(name, 1.0f); // Default size for CubeMesh
         this.screenBounds = screenBounds;
         this.bounceReduction = 0.9f; // Energy loss on bounce
     }
@@ -21,17 +21,17 @@ public class BouncingCube extends Cube {
         super.update(deltaTime);
         
         // Bounce off screen boundaries
-        if (Math.abs(position.x) > screenBounds.x / 2) {
-            position.x = (screenBounds.x / 2) * Math.signum(position.x);
-            velocity.x *= -bounceReduction;
+        if (Math.abs(getTransform().getPosition().x) > screenBounds.x / 2) {
+            getTransform().getPosition().x = (screenBounds.x / 2) * Math.signum(getTransform().getPosition().x);
+            getVelocity().x *= -bounceReduction;
         }
-        if (Math.abs(position.y) > screenBounds.y / 2) {
-            position.y = (screenBounds.y / 2) * Math.signum(position.y);
-            velocity.y *= -bounceReduction;
+        if (Math.abs(getTransform().getPosition().y) > screenBounds.y / 2) {
+            getTransform().getPosition().y = (screenBounds.y / 2) * Math.signum(getTransform().getPosition().y);
+            getVelocity().y *= -bounceReduction;
         }
-        if (Math.abs(position.z) > screenBounds.z / 2) {
-            position.z = (screenBounds.z / 2) * Math.signum(position.z);
-            velocity.z *= -bounceReduction;
+        if (Math.abs(getTransform().getPosition().z) > screenBounds.z / 2) {
+            getTransform().getPosition().z = (screenBounds.z / 2) * Math.signum(getTransform().getPosition().z);
+            getVelocity().z *= -bounceReduction;
         }
     }
 }

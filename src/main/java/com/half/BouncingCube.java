@@ -10,7 +10,7 @@ public class BouncingCube extends Cube {
     private float bounceReduction;
     
     public BouncingCube(String name, Vector3f screenBounds) {
-        super(name);
+        super(name, 1.0f); // Default size for CubeMesh
         this.screenBounds = screenBounds;
         this.bounceReduction = 0.9f; // Energy loss on bounce
     }
@@ -20,19 +20,19 @@ public class BouncingCube extends Cube {
         super.update(deltaTime);
         
         // Check bounds and bounce if needed
-        if (position.x - bounds.x < -screenBounds.x || position.x + bounds.x > screenBounds.x) {
-            velocity.x = -velocity.x * bounceReduction;
-            position.x = Math.max(-screenBounds.x + bounds.x, Math.min(screenBounds.x - bounds.x, position.x));
+        if (getTransform().getPosition().x - getBounds().x < -screenBounds.x || getTransform().getPosition().x + getBounds().x > screenBounds.x) {
+            getVelocity().x = -getVelocity().x * bounceReduction;
+            getTransform().getPosition().x = Math.max(-screenBounds.x + getBounds().x, Math.min(screenBounds.x - getBounds().x, getTransform().getPosition().x));
         }
         
-        if (position.y - bounds.y < -screenBounds.y || position.y + bounds.y > screenBounds.y) {
-            velocity.y = -velocity.y * bounceReduction;
-            position.y = Math.max(-screenBounds.y + bounds.y, Math.min(screenBounds.y - bounds.y, position.y));
+        if (getTransform().getPosition().y - getBounds().y < -screenBounds.y || getTransform().getPosition().y + getBounds().y > screenBounds.y) {
+            getVelocity().y = -getVelocity().y * bounceReduction;
+            getTransform().getPosition().y = Math.max(-screenBounds.y + getBounds().y, Math.min(screenBounds.y - getBounds().y, getTransform().getPosition().y));
         }
         
-        if (position.z - bounds.z < -screenBounds.z || position.z + bounds.z > screenBounds.z) {
-            velocity.z = -velocity.z * bounceReduction;
-            position.z = Math.max(-screenBounds.z + bounds.z, Math.min(screenBounds.z - bounds.z, position.z));
+        if (getTransform().getPosition().z - getBounds().z < -screenBounds.z || getTransform().getPosition().z + getBounds().z > screenBounds.z) {
+            getVelocity().z = -getVelocity().z * bounceReduction;
+            getTransform().getPosition().z = Math.max(-screenBounds.z + getBounds().z, Math.min(screenBounds.z - getBounds().z, getTransform().getPosition().z));
         }
     }
 }
